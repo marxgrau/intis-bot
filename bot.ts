@@ -13,6 +13,17 @@ const ADMIN_ID = Number(process.env.ADMIN_ID);
 const WALLET_RECEPTORA = process.env.WALLET_RECEPTORA!;
 const INTIS_ADDRESS = process.env.INTIS_ADDRESS!;
 
+const BOT = new TelegramBot(BOT_TOKEN, { polling: true });
+
+const ONLYFANS_URL = process.env.ONLYFANS_URL!;
+
+const PROMOCIONES = [
+    "🔥 Nuevo contenido exclusivo disponible.",
+    "❤️ Nuevo pack VIP publicado.",
+    "🎁 Promoción por tiempo limitado.",
+    "🌙 Nuevo contenido disponible."
+];
+
 const PAQUETES: { [key: string]: { nombre: string; usd: number; channelId: string; emoji: string } } = {
     perla: { nombre: 'Luna Perla', usd: 0.99, channelId: process.env.CH_LUNA_PERLA!, emoji: '🤍' },
     cuarzo: { nombre: 'Luna Cuarzo', usd: 1.99, channelId: process.env.CH_LUNA_CUARZO!, emoji: '💎' },
@@ -616,3 +627,37 @@ process.on('uncaughtException', (err: any) => {
 });
 
 console.log('✅ Bot listo para recibir mensajes');
+const CANAL_PUBLICO = "@lunamcxvip";
+
+setInterval(async () => {
+    try {
+        const promo = PROMOCIONES[
+            Math.floor(Math.random() * PROMOCIONES.length)
+        ];
+
+        await bot.sendMessage(
+            CANAL_PUBLICO,
+            `${promo}
+
+🔥 Accede al contenido VIP
+
+👇 Haz clic aquí`,
+            {
+                reply_markup: {
+                    inline_keyboard: [
+                        [
+                            {
+                                text: "🔥 Ver OnlyFans",
+                                url: ONLYFANS_URL
+                            }
+                        ]
+                    ]
+                }
+            }
+        );
+
+        console.log("✅ Promoción publicada");
+    } catch (err) {
+        console.error("Error publicando promoción:", err);
+    }
+}, 12 * 60 * 60 * 1000);
