@@ -238,20 +238,20 @@ if (data === "ayuda_yape") {
 
 ⏳ Un administrador revisará el pago y activará tu acceso VIP.`;
 
-    await bot.sendPhoto(
-        chatId,
-        "./assets/yape_qr.jpg",
-        {
-            caption: mensaje,
-            parse_mode: "HTML",
-            reply_markup: {
-                inline_keyboard: [
-                    [{ text: "📦 Ver paquetes", callback_data: "paquetes" }],
-                    [{ text: "⬅️ Volver", callback_data: "start" }]
-                ]
-            }
+await bot.sendPhoto(
+    chatId,
+    "./assets/yape_qr.jpeg",
+    {
+        caption: mensaje,
+        parse_mode: "HTML",
+        reply_markup: {
+            inline_keyboard: [
+                [{ text: "📦 Ver paquetes", callback_data: "paquetes" }],
+                [{ text: "⬅️ Volver", callback_data: "start" }]
+            ]
         }
-    );
+    }
+);
 
     return;
 }
