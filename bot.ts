@@ -143,7 +143,31 @@ bot.on('callback_query', async (query) => {
         });
         return;
     }
-    
+    if (data === "paquetes_yape") {
+
+    const mensaje = `📦 <b>Paquetes Luna VIP (Yape)</b>
+
+Selecciona un paquete para pagar con Yape:`;
+
+    await bot.sendMessage(chatId, mensaje, {
+        parse_mode: "HTML",
+        reply_markup: {
+            inline_keyboard: [
+                [{ text: "🤍 Luna Perla - S/3.90", callback_data: "yape_perla" }],
+                [{ text: "💎 Luna Cuarzo - S/7.90", callback_data: "yape_cuarzo" }],
+                [{ text: "🔮 Luna Cristal - S/19.90", callback_data: "yape_cristal" }],
+                [{ text: "💙 Luna Zafiro - S/39.90", callback_data: "yape_zafiro" }],
+                [{ text: "❤️ Luna Rubí - S/79.90", callback_data: "yape_rubi" }],
+                [{ text: "💚 Luna Esmeralda - S/199.90", callback_data: "yape_esmeralda" }],
+                [{ text: "💠 Luna Diamante - S/399.90", callback_data: "yape_diamante" }],
+                [{ text: "🤍 Luna Platino - S/799.90", callback_data: "yape_platino" }],
+                [{ text: "⬅️ Volver", callback_data: "ayuda_yape" }]
+            ]
+        }
+    });
+
+    return;
+}
     if (data === 'precio') {
         const precio = await obtenerPrecioINTIS();
         const mensaje = `💎 <b>Precio actual de INTIS</b>\n\n$${precio.toFixed(6)} USD\n\n<i>Precio actualizado en tiempo real desde DexScreener</i>`;
@@ -246,7 +270,7 @@ await bot.sendPhoto(
         parse_mode: "HTML",
         reply_markup: {
             inline_keyboard: [
-                [{ text: "📦 Ver paquetes", callback_data: "paquetes" }],
+                [{ text: "📦 Ver paquetes", callback_data: "paquetes_yape" }],
                 [{ text: "⬅️ Volver", callback_data: "start" }]
             ]
         }
@@ -351,7 +375,7 @@ if (data === "start") {
         
         try {
             const filter = intis.filters.Transfer(null, WALLET_RECEPTORA);
-            const fromBlock = await provider.getBlockNumber() - 200;
+            const fromBlock = await provider.getBlockNumber() - 20;
             const events = await intis.queryFilter(filter, fromBlock);
             
             // Buscar EXACTAMENTE la cantidad con los decimales únicos
