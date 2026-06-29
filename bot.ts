@@ -46,6 +46,9 @@ const ordenesPendientes = new Map<string, {
     codigoUnico: number;
     timestamp: number;
 }>();
+const comprobantesYape = new Map<number, {
+    paquete: string;
+}>();
 
 // ============================================
 // FUNCIONES
@@ -308,7 +311,57 @@ if (data === "start") {
 
     return;
 }
-    
+  if (data.startsWith('yape_')) {
+    const paqueteKey = data.replace('yape_', '');
+    const paquete = PAQUETES[paqueteKey];
+
+    if (!paquete) {
+        await bot.sendMessage(chatId, '❌ Paquete no encontrado.');
+        return;
+    }
+
+    const soles = {
+        perla: 3.90,
+        cuarzo: 7.90,
+        cristal: 19.90,
+        zafiro: 39.90,
+        rubi: 79.90,
+        esmeralda: 199.90,
+        diamante: 399.90,
+        platino: 799.90
+    };
+    comprobantesYape.set(userId, {
+    paquete: paqueteKey
+});
+    await bot.sendPhoto(
+        chatId,
+        "./assets/yape_qr.jpeg",
+        {
+            caption:
+`${paquete.emoji} <b>${paquete.nombre}</b>
+
+💰 Monto:
+<b>S/${soles[paqueteKey]}</b>
+
+👤 Yapea a:
+
+<b>Vicky Teodora Merma Charca</b>
+
+📷 Escanea el QR y realiza el pago.
+
+📩 Luego envía el comprobante a este chat para validar tu acceso.`,
+            parse_mode: "HTML",
+reply_markup: {
+    inline_keyboard: [
+        [{ text: "📤 Enviar comprobante", callback_data: "enviar_comprobante" }],
+        [{ text: "⬅️ Volver", callback_data: "paquetes_yape" }]
+    ]
+}
+        }
+    );
+
+    return;
+}  
     if (data.startsWith('comprar_')) {
         const paqueteKey = data.replace('comprar_', '');
         const paquete = PAQUETES[paqueteKey];
@@ -350,7 +403,13 @@ if (data === "start") {
         });
         return;
     }
-    
+    if (data === "enviar_comprobante") {
+    await bot.sendMessage(
+        chatId,
+        "📷 Ahora envía la foto del comprobante de Yape.\n\nCuando la envíes, será revisada por un administrador."
+    );
+    return;
+}
     if (data.startsWith('verificar_')) {
         const orderId = data.replace('verificar_', '');
         const orden = ordenesPendientes.get(orderId);
@@ -420,6 +479,57 @@ if (data === "start") {
         }
         return;
     }
+    if (data.startsWith("aprobar_")) {
+
+    if (userId !== ADMIN_ID) {
+        await bot.sendMessage(chatId, "❌ Solo el administrador puede aprobar.");
+        return;
+    }
+
+    const [, compradorIdStr, paqueteKey] = data.split("_");
+    const compradorId = Number(compradorIdStr);
+
+    const paquete = PAQUETES[paqueteKey];
+
+    const invite = await bot.createChatInviteLink(paquete.channelId, {
+        member_limit: 1
+    });
+
+    await bot.sendMessage(
+        compradorId,
+        `✅ <b>Pago aprobado</b>
+
+${paquete.emoji} ${paquete.nombre}
+
+🔗 Tu acceso VIP:
+
+${invite.invite_link}`,
+        { parse_mode: "HTML" }
+    );
+
+    await bot.sendMessage(chatId, "✅ Acceso enviado al comprador.");
+
+    return;
+}
+
+if (data.startsWith("rechazar_")) {
+
+    if (userId !== ADMIN_ID) {
+        await bot.sendMessage(chatId, "❌ Solo el administrador puede rechazar.");
+        return;
+    }
+
+    const compradorId = Number(data.split("_")[1]);
+
+    await bot.sendMessage(
+        compradorId,
+        "❌ Tu comprobante fue rechazado.\n\nVuelve a enviar un comprobante válido."
+    );
+
+    await bot.sendMessage(chatId, "✅ Usuario notificado.");
+
+    return;
+}
 });
 
 // Comando /publicar - Solo admin
@@ -449,6 +559,52 @@ bot.onText(/\/publicar/, async (msg) => {
     } catch (err: any) {
         await bot.sendMessage(msg.chat.id, `❌ Error: ${err.message}\n\nVerifica que el bot sea admin de @lunamcxvip con permiso de publicar.`);
     }
+});
+bot.on("photo", async (msg) => {
+    const userId = msg.from?.id;
+    if (!userId) return;
+
+    const datos = comprobantesYape.get(userId);
+    if (!datos) return;
+
+    const paquete = PAQUETES[datos.paquete];
+
+    const fileId = msg.photo![msg.photo!.length - 1].file_id;
+
+    await bot.sendPhoto(
+        ADMIN_ID,
+        fileId,
+        {
+            caption:
+`💳 Nuevo comprobante de Yape
+
+👤 Usuario: ${userId}
+
+📦 Paquete:
+${paquete.emoji} ${paquete.nombre}`,
+            reply_markup: {
+                inline_keyboard: [
+                    [
+                        {
+                            text: "✅ Aprobar",
+                            callback_data: `aprobar_${userId}_${datos.paquete}`
+                        }
+                    ],
+                    [
+                        {
+                            text: "❌ Rechazar",
+                            callback_data: `rechazar_${userId}`
+                        }
+                    ]
+                ]
+            }
+        }
+    );
+
+    await bot.sendMessage(
+        msg.chat.id,
+        "✅ Comprobante enviado al administrador.\n\n⏳ Espera la aprobación."
+    );
 });
 
 process.on('unhandledRejection', (reason: any) => {
